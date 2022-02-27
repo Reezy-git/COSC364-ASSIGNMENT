@@ -16,8 +16,8 @@ class Server:
 
     def fileno(self):
         """Returns fileno, required for select()"""
-f        return self.server.fileno()
-f
+        return self.server.fileno()
+
     def on_read(self):
         """What to do when the socket is accessed."""
         print(f'[CONNECTION] Connection request received on {self.name} socket.')
