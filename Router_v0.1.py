@@ -10,17 +10,20 @@ import threading  # Probably won't be used
 import sys
 
 
-def server(host_name, port):
-    SERVER = host_name, port
-    # SERVER= socket.gethostbyname(socket.gethostname()), 5000
+class Server:
+    def __init__(self, address, port):
+        self.receiver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # socket to receive
+        host = address, port
+        self.receiver.bind(host)
+        self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Socket to send
 
-    open_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    open_socket.bind(SERVER)
-    print("waiting on port:", SERVER[1])
+    def fileno(self):  # required for select
+        return self.receiver.fileno()
 
-    while True:
-        data, addr = open_socket.recvfrom(1024)
-        print(data.decode('utf-8'))
+    def on_read(self):  # the method for receiving a message
+        """todo: process message into something useful i.e. receive new address data"""
+        message = self.receiver.recv(1024).decode('utf-8')
+        print(message)
 
 
 class Destination:
@@ -39,3 +42,9 @@ class Destination:
 def main():
     """I run the show around here!
     todo: implement send/recv via udp and select"""
+    server = Server('localhost', 5010)
+
+    while True:
+        readers, _, _ = select.select([server], [], [])  # select takes 3 lists as input we only need first one
+        for reader in readers:
+            reader.on_read()
