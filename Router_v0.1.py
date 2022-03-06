@@ -54,7 +54,7 @@ class Router:
 #               '7': [[7771, 7774], [1117, 4447]]}
 
 test_routers = {'1': [[5000], [5001]],
-                '2': [[5001], [5000]]}
+                '2': [[5001], [5000]]}  # dictionary format {id: [[inputs], [outputs]]}
 
 def main():
     """I run the show around here!
