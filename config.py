@@ -1,5 +1,8 @@
 import sys
+import re
 
+# load in the dictionary
+# list of tuple
 
 class Main:
     # execute when the class is being initiated
@@ -8,63 +11,68 @@ class Main:
         self.input_ports = input_ports
         self.outputs = outputs
 
-    # Return in readable information
-    def __str__(self):
-        router_format = "Router-Id: " + self.router_id[9:]
-        router_format += "=" * len(self.outputs) + '\n'
-        router_format += "Input Ports: " + self.input_ports[12:]
-        router_format += "Outputs: " + self.outputs[8:]
-        return router_format
-
-
-# check router id
-def check_router(router_id):
-    if router_id >= 1 and router_id <= 64000:
-        return True
-    print("Router doesn't exist")
-
-
-# check input ports
-def check_input_ports(input_ports):
-    duplicated_ports = []
-    for port in input_ports:
-        if port >= 1024 and port <= 64000:
-            if port in duplicated_ports:
-                return True
-            duplicated_ports.append(port)
-        print("Port is too small/big to exist!")
-    return duplicated_ports
-
-
-# check the outputs
-# def check_outputs(input_ports, outputs):
-#
-#    for output in outputs:
-#        if output[0] in input_ports:
-
 
 # Read the router config file
 def read_router_file(filename):
-    content = open(filename, 'r')
-    router_contents = content.readlines()
+    router_num = 1
+    input_list = []
+    output_list = []
+
     content_list = []
+    # open the file and read the lines
+    router_file = open(filename, 'r')
+    router_contents = router_file.readlines()
+
+    # for the contents in the file, get the router_id, input_ports and output ports
     for router_content in router_contents:
-        router_content.split(",")
+        router_content = re.split(", | |\n", router_content)
         content_list.append(router_content)
-        content.close()
-    return content_list
+        #print(content_list)
+
+    for contents in content_list:
+        # Taking the router id
+        if "router-id" in contents:
+            try:
+                router_num = int(contents[1])
+                print(router_num)
+            except ValueError:
+                print("Invalid router id")
+
+        # Taking the input ports
+        if "input-ports" in contents:
+            try:
+                input_list = contents[1:-1]
+                input_list = list(map(int, input_list))
+                if len(input_list) == 0:
+                    print("No input ports found")
+                else:
+                    print("Valid Inputs")
+                    print(input_list)
+            except ValueError:
+                print("Invalid input ports")
+
+        # Taking the output ports
+        if "outputs" in contents:
+            try:
+                output_nums = []
+                output_list = contents[1:]
+                #print(output_list)
+                for outputs in output_list:
+                    split_output = outputs.split("-")
+                    output_nums.append(split_output)
+                #print("hello", output_nums)
+                for output in output_nums:
+                    output[0], output[1], output[2] = int(output[0]), int(output[1]), int(output[2])
+                print(output_nums)
+            except ValueError:
+                print("Invalid outputs")
 
 
-# Input for what router file is needed
-def input_router():
-    router_file = input("Input a router: ")
-    router, ports, outputs = read_router_file(router_file)
-    return router, ports, outputs
 
 
 def main():
     # read config file
-    router_id, input_ports, outputs = input_router()
+    router_id, input_ports, outputs = read_router_file("router2.txt")
     router = Main(router_id, input_ports, outputs)
     print(router)
 

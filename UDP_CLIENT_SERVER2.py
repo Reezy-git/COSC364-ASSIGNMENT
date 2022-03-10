@@ -20,6 +20,3 @@ while True:
     message = bytes(input('Enter message to send : '), 'utf-8')
     out_socket.sendto(message, host)
 
-
-
-
