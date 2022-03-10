@@ -1,7 +1,7 @@
 """A basic router for RIP implementation
-todo: define destination class
-todo: implement Server class to listen and act as a router
-todo: implement config reader"""
+todo: Router: define f_table(forwarding table), write __str__ to pring f_table, write recv_msg
+todo: Server: implement communication with router
+todo: Main: implement config reader and use to create server and router objects"""
 
 
 import socket
