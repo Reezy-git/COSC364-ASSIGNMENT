@@ -1,8 +1,11 @@
 import sys
 import re
 
-# load in the dictionary
-# list of tuple
+# input port instance router listen to
+# output how to reach rich neighbor
+# send data to neighbor poisoined reverse
+# listen to if the neighbor sends data to the router and update roouting table
+
 
 class Main:
     # execute when the class is being initiated
@@ -24,7 +27,7 @@ class Main:
 
 
 
-    # Read the router config file
+# Read the router config file
 def read_router_file(filename):
     router_num = 1
     input_list = []
@@ -80,12 +83,6 @@ def read_router_file(filename):
             except ValueError:
                 print("Invalid outputs")
     return router_num, input_list, output_nums
-
-# input port instance router listen to
-# output how to reach rich neighbor
-
-# send data to neighbor poisoined reverse
-# listen to if the neighbor sends data to the router and update roouting table
 
 
 def main():
