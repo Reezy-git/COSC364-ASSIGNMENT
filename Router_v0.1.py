@@ -35,7 +35,7 @@ class Router:
 
     def recv_msg(self, msg, port):
         msg_dst = msg[0:8]
-        print('Data received: ', msg)
+        print('Data received: ', msg, port, self.router_id)
         if msg_dst == self.router_id:
             print('Message received at router', self.router_id)
         else:
@@ -66,6 +66,7 @@ def main():
         routers.append(Router(router, test_routers[router][1]))
         for port in test_routers[router][0]:
             servers.append(Server('localhost', int(port), routers[i]))
+        i += 1
 
     while True:
         readers, _, _ = select.select(servers, [], [])  # select takes 3 lists as input we only need first one
