@@ -1,6 +1,5 @@
 """A basic router for RIP implementation
-todo: Router: define f_table(forwarding table), write __str__ to pring f_table, write recv_msg
-todo: Server: implement communication with router
+todo: Router: define f_table(forwarding table), write __str__ to print f_table, write recv_msg
 todo: Main: implement config reader and use to create server and router objects"""
 
 
@@ -14,16 +13,17 @@ class Server:
     def __init__(self, address, port, owner):
         self.receiver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # socket to receive
         host = 'localhost', port
+        self.port = port
         self.receiver.bind(host)
-        self.owner  # the router which owns this port
+        self.owner = owner  # the router which owns this port
 
     def fileno(self):  # required for select
         return self.receiver.fileno()
 
     def on_read(self):  # the method for receiving a message
-        """todo: send info to my router (message + my port)"""
         message = self.receiver.recv(1024).decode('utf-8')
         print('Send to ', self.owner)
+        self.owner.recv_msg(message, self.port)
 
 
 class Router:
@@ -35,6 +35,7 @@ class Router:
 
     def recv_msg(self, msg, port):
         msg_dst = msg[0:8]
+        print('Data received: ', msg)
         if msg_dst == self.router_id:
             print('Message received at router', self.router_id)
         else:
@@ -57,20 +58,19 @@ test_routers = {'1': [[5000], [5001]],
                 '2': [[5001], [5000]]}  # dictionary format {id: [[inputs], [outputs]]}
 
 def main():
-    """I run the show around here!
-    todo: see comment on line 66"""
+    """I run the show around here!"""
     servers = []
+    routers = []
+    i = 0
     for router in test_routers:
-        router = Router(router, test_routers[router][1])
+        routers.append(Router(router, test_routers[router][1]))
         for port in test_routers[router][0]:
-            """create a server with below details """
-            Server('localhost', int(port), router)
-
-    print(len(servers))
+            servers.append(Server('localhost', int(port), routers[i]))
 
     while True:
-        readers, _, _ = select.select([servers], [], [])  # select takes 3 lists as input we only need first one
+        readers, _, _ = select.select(servers, [], [])  # select takes 3 lists as input we only need first one
         for reader in readers:
             reader.on_read()
 
-#test push
+
+main()
