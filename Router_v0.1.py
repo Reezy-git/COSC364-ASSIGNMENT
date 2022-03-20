@@ -27,11 +27,14 @@ class Server:
 
 
 class Router:
-    def __init__(self, router_id, outputs):
+    def __init__(self, router_id):
         self.router_id = router_id
-        self.outputs = outputs
+        self.outputs = []
         self.f_table = {1: (5000, 8), 2: (5001, 2)}  # forwarding table
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Socket to send
+
+    def add_output(self, output, distance):
+        self.outputs.append(output)
 
     def recv_msg(self, msg, port):
         msg_dst = msg[0:8]
@@ -54,8 +57,8 @@ class Router:
 #               '6':[[6661, 6665], [1116, 5556]],
 #               '7': [[7771, 7774], [1117, 4447]]}
 
-test_routers = {'1': [[5000], [5001]],
-                '2': [[5001], [5000]]}  # dictionary format {id: [[inputs], [outputs]]}
+test_routers = {'1': [(5000, 5001, 8)],
+                '2': [(5001, 5000, 8)]}  # dictionary format {id: [(input, output, cost), (link2))]}
 
 def main():
     """I run the show around here!"""
@@ -63,9 +66,10 @@ def main():
     routers = []
     i = 0
     for router in test_routers:
-        routers.append(Router(router, test_routers[router][1]))
-        for port in test_routers[router][0]:
-            servers.append(Server('localhost', int(port), routers[i]))
+        routers.append(Router(router))
+        for link in test_routers[router]:
+            servers.append(Server('localhost', int(link[0]), routers[i]))
+            routers[i].add_output(link[1], link[2])
         i += 1
 
     while True:
