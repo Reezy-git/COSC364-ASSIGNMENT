@@ -29,12 +29,12 @@ class Server:
 class Router:
     def __init__(self, router_id):
         self.router_id = router_id
-        self.outputs = []
+        self.links = []
         self.f_table = {1: (5000, 8), 2: (5001, 2)}  # forwarding table
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Socket to send
 
-    def add_output(self, output, distance):
-        self.outputs.append(output)
+    def add_link(self, link):
+        self.links.append(link)
 
     def recv_msg(self, msg, port):
         msg_dst = msg[0:8]
@@ -69,7 +69,7 @@ def main():
         routers.append(Router(router))
         for link in test_routers[router]:
             servers.append(Server('localhost', int(link[0]), routers[i]))
-            routers[i].add_output(link[1], link[2])
+            routers[i].add_link(link)
         i += 1
 
     while True:
