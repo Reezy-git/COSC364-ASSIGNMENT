@@ -32,14 +32,26 @@ class Router:
     def __init__(self, router_id):
         self.router_id = router_id
         self.links = []
-        self.f_table = {1: (5000, 8), 2: (5001, 2)}  # forwarding table
+        self.f_table = {}
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Socket to send
 
     def add_link(self, link):
         self.links.append(link)
 
     def __str__(self):
-        # Your routing table prints here
+        table_format = "=" * 18
+        table_format += " RIPv2 Routing Table of " + str(self.router_id) + " "
+        table_format += "=" * 18 + "\n"
+        table_format += "Router Inputs: " + str(self.input_ports) + "\n"
+        table_format += f"{'Router Id':<15}{'Port':>6}{'Cost':>20}{'Next Hop':>21}"
+        table_format += "\n" + "=" * 62 + "\n"
+        for key, value in sorted(self.routing_dictionary.items()):
+            port, cost = value
+            table_format += "{:<12} {:>6}  {:>20} \n".format(key, port, cost)
+        print(table_format)
+
+    def __repr(self):
+        return self.__str__()
 
     def recv_msg(self, msg, port):
         msg_dst = msg[0:8]

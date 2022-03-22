@@ -15,24 +15,46 @@ class Main:
         self.input_ports = input_ports
         self.outputs = outputs
         self.routing_dictionary = {}
-        # For loop to get information of output port in a dictionary template
-        for neighbor_port, cost, neighbor_id in outputs:
-            self.routing_dictionary[neighbor_id] = (int(cost), int(neighbor_port))
-        #self.routing_table = [self.router_id, self.routing_dictionary]
-        #[1, {2: (1, 2221), 7: (8, 7771), 6: (5, 6661)}]
 
-    # Human-readable routing table returned that can be printed in terminal
-    def print_routing_table(self):
-        table_format = "="*18
-        table_format += " RIPv2 Routing Table of " + str(self.router_id) + " "
-        table_format += "="*18 + "\n"
-        table_format += "Router Inputs: " + str(self.input_ports) + "\n"
-        table_format += f"{'Router Id':<15}{'Port':>6}{'Cost':>20}{'Next Hop':>21}"
-        table_format += "\n" + "="*62 + "\n"
-        for key, value in sorted(self.routing_dictionary.items()):
-            port, cost = value
-            table_format += "{:<12} {:>6}  {:>20} \n".format(key, port, cost)
-        print(table_format)
+
+    # Human-readable routing dictionary returned that can be printed in terminal
+    def parse_routing_dictionary(self, file):
+        neighbor_ports = []
+        cost_list = []
+        output_slice = []
+        each = []
+        router_dictionary = {}
+        router_list = []
+
+        router_num, new_input_list, output_list = read_router_file(file)
+        self.router_id = router_num
+        self.input_ports = new_input_list
+        self.outputs = output_list
+
+        for outputs in output_list:
+            output_slice.append(outputs.split("-"))
+
+        # For each list, their output are turned into an int.
+        for output in output_slice:
+            output[0], output[1], output[2] = int(output[0]), int(output[1]), int(output[2])
+            neighbor_port, cost, neighbor_id = output[0], output[1], output[2]
+            neighbor_ports.append(neighbor_port)
+            cost_list.append(cost)
+        a = 0
+        for i, c, n in zip(new_input_list, neighbor_ports, cost_list):
+            each.append([i, n, c])
+            a += 1
+        router_dictionary[router_num] = each
+        self.routing_dictionary = router_dictionary
+        print(self.routing_dictionary)
+
+
+    def __str__(self):
+        print("Router Id: {}".format(self.router_id))
+
+    def __repr(self):
+        return self.__str__()
+
 
 
 # Read the router config file
@@ -45,53 +67,43 @@ def read_router_file(filename):
     # open the file and read the lines
     router_file = open(filename, 'r')
     router_contents = router_file.readlines()
-
     # for the contents in the file, get the router_id, input_ports and output ports
     for router_content in router_contents:
         router_content = re.split(", | |\n", router_content)
         content_list.append(router_content)
-        # print(content_list)
+    #print(content_list)
 
+    # For the each in content list
     for contents in content_list:
         # Taking the router id
         if "router-id" in contents:
             try:
                 router_num = int(contents[1])
-                # print(router_num)
             except ValueError:
                 print("Invalid router id")
                 sys.exit()
-
         # Taking the input ports
         if "input-ports" in contents:
             try:
                 input_list = contents[1:-1]
-                input_list = list(map(int, input_list))
+                new_input_list = [int(i) for i in input_list]
                 if len(input_list) == 0:
                     print("No input ports found")
                     sys.exit()
             except ValueError:
                 print("Invalid input ports/ No input ports found")
                 sys.ext()
-
         # Taking the output ports
         if "outputs" in contents:
             try:
                 output_nums = []
+                output_slice = []
                 output_list = contents[1:]
-                # print(output_list)
-                for outputs in output_list:
-                    split_output = outputs.split("-")
-                    output_nums.append(split_output)
-                # print("hello", output_nums)
-                for output in output_nums:
-                    output[0], output[1], output[2] = int(output[0]), int(output[1]), int(output[2])
-                    neighbor_port, cost, neighbor_id = output[0], output[1], output[2]
-                print(neighbor_port, cost, neighbor_id)
+                #print(output_list)
             except ValueError:
                 print("Invalid outputs")
                 sys.exit()
-    return router_num, input_list, output_nums
+    return router_num, new_input_list, output_list
 
 
 def main():
@@ -106,11 +118,12 @@ def main():
     # read config file
     router_id, input_ports, outputs = read_router_file(router_file)
 
-    # print(router_id, '0000')
+    # calling the main class
     router = Main(router_id, input_ports, outputs)
 
     # Print the routing table of the router
-    router.print_routing_table()
+    router.parse_routing_dictionary(router_file)
+
 
 if __name__ == "__main__":
     main()
