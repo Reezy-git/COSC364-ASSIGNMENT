@@ -38,6 +38,9 @@ class Router:
     def add_link(self, link):
         self.links.append(link)
 
+    def __str__(self):
+        # Your routing table prints here
+
     def recv_msg(self, msg, port):
         msg_dst = msg[0:8]
         print('Data received: ', msg, port, self.router_id)
@@ -60,7 +63,7 @@ class Router:
 #               '7': [[7771, 7774], [1117, 4447]]}
 
 test_routers = {'1': [(5000, 5001, 8)],
-                '2': [(5001, 5000, 8)]}  # dictionary format {id: [(input, output, cost), (link2)]}
+                '2': [(5001, 5000, 8)]}  # dictionary format {id: [(input, output, cost), (link2))]}
 
 def main():
     """I run the show around here!"""
