@@ -8,6 +8,8 @@ import select
 import threading  # Probably won't be used
 import sys
 
+# import config file
+import config
 
 class Server:
     def __init__(self, address, port, owner):
@@ -62,6 +64,16 @@ test_routers = {'1': [(5000, 5001, 8)],
 
 def main():
     """I run the show around here!"""
+    try:
+        if len(sys.argv) < 2:
+            sys.exit()
+
+        with open(sys.argv[1]) as router_file:
+            config_file = Config()
+            config_file.read_router_file(router_file)
+
+            pass
+
     servers = []
     routers = []
     i = 0
@@ -76,6 +88,5 @@ def main():
         readers, _, _ = select.select(servers, [], [])  # select takes 3 lists as input we only need first one
         for reader in readers:
             reader.on_read()
-
 
 main()
