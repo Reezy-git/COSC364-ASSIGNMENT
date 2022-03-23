@@ -11,6 +11,8 @@ import sys
 # import config file
 import config
 
+# Start up a UDP socket and bind it
+# https://pythontic.com/modules/socket/udp-client-server-example
 class Server:
     # clarify for me what is the address, port, owner? you mean id, input and output
     def __init__(self, address, port, owner):
@@ -29,20 +31,18 @@ class Server:
         print('Send to ', self.owner)
         self.owner.recv_msg(message, self.port)
 
-
 class Router():
-    " will initialize the configuration class. The paramaters are used since it is required"
+    """ will initialize the configuration class. The paramaters are used since it is required"""
     def __init__(self, router_id):
-
         self.router_id = router_id
         self.links = []
-        self.f_table = {}
+        self.forwarding_table = {}
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Socket to send
-
 
     def add_link(self, link):
         self.links.append(link)
 
+    # Display the information of the routing dictionary
     def __str__(self):
         table_format = "=" * 18
         table_format += " RIPv2 Routing Table of " + str(self.router_id) + " "
@@ -67,7 +67,7 @@ class Router():
             if self.f_table.__contains__(msg_dst):
                 self.sender.sendto(msg, self.f_table[msg_dst][0])
 
-    def update_f_table(self, new_info):
+    def update_forwarding_table(self, new_info):
         """todo: write me"""
 
 
@@ -91,33 +91,17 @@ def main():
         router_file = sys.argv[1]
         router_id, inputs, outputs = config.read_router_file(router_file)
         router = config.Main(router_id, inputs, outputs)
-        router_config = router.parse_routing_dictionary(router_file)
 
-        if not router_config:
+        if not router:
             sys.exit("Invalid configuration file")
         print("Configuration has been loaded!")
-
-        # cannot implement server as it got three argument atm
-        # Server(address, port, owner)
-        # Router(router_id)
+        # Read the router ID from grabbing it from Main
+        route = Router(router_id) # grabbing the router_id
 
     except IndexError:
         sys.exit("Argument is invalid!")
 
-    servers = []
-    routers = []
-    i = 0
-    for router in test_routers:
-        routers.append(Router(router))
-        for link in test_routers[router]:
-            servers.append(Server('localhost', int(link[0]), routers[i]))
-            routers[i].add_link(link)
-        i += 1
 
-    while True:
-        readers, _, _ = select.select(servers, [], [])  # select takes 3 lists as input we only need first one
-        for reader in readers:
-            reader.on_read()
 
 
 main()
