@@ -28,12 +28,16 @@ class Server:
         self.owner.recv_msg(message, self.port)
 
 
-class Router:
-    def __init__(self, router_id):
+class Router(object):
+    " will initialize the configuration class. The paramaters are used since it is required"
+    def __init__(self, config_file):
+        self.config_file = config_file
         self.router_id = router_id
         self.links = []
         self.f_table = {}
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Socket to send
+
+        print(self.config_file)
 
     def add_link(self, link):
         self.links.append(link)
@@ -74,8 +78,8 @@ class Router:
 #               '6':[[6661, 6665], [1116, 5556]],
 #               '7': [[7771, 7774], [1117, 4447]]}
 
-test_routers = {'1': [(5000, 5001, 8)],
-                '2': [(5001, 5000, 8)]}  # dictionary format {id: [(input, output, cost), (link2))]}
+#test_routers = {'1': [(5000, 5001, 8)],
+#               '2': [(5001, 5000, 8)]}  # dictionary format {id: [(input, output, cost], (link2))]}
 
 def main():
     """I run the show around here!"""
@@ -83,11 +87,17 @@ def main():
         if len(sys.argv) < 2:
             sys.exit()
 
-        with open(sys.argv[1]) as router_file:
-            config_file = Config()
-            config_file.read_router_file(router_file)
-
-            pass
+        router_file = sys.argv[1]
+        router_id, inputs, outputs = config.read_router_file(router_file)
+        router = config.Main(router_id, inputs, outputs)
+        router_config = router.parse_routing_dictionary(router_file)
+        if not router_config:
+            sys.exit("Invalid configuration file")
+        else:
+            print("Configuration has been loaded!")
+            Router(router_config)
+    except IndexError:
+        sys.exit("Argument is invalid!")
 
     servers = []
     routers = []
@@ -103,5 +113,6 @@ def main():
         readers, _, _ = select.select(servers, [], [])  # select takes 3 lists as input we only need first one
         for reader in readers:
             reader.on_read()
+
 
 main()

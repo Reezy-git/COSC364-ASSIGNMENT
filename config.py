@@ -22,15 +22,16 @@ class Main:
         neighbor_ports = []
         cost_list = []
         output_slice = []
-        each = []
+        each_pair = []
         router_dictionary = {}
-        router_list = []
 
+        # Grabbing the router id, new input and output list
         router_num, new_input_list, output_list = read_router_file(file)
         self.router_id = router_num
         self.input_ports = new_input_list
         self.outputs = output_list
 
+        # for the output, slice it to get the neighbor port, cost and id
         for outputs in output_list:
             output_slice.append(outputs.split("-"))
 
@@ -40,21 +41,18 @@ class Main:
             neighbor_port, cost, neighbor_id = output[0], output[1], output[2]
             neighbor_ports.append(neighbor_port)
             cost_list.append(cost)
+
+        # For loop for grabbing all the list and putting it individual list
+        # Using zip to use three list in one loop.
         a = 0
         for i, c, n in zip(new_input_list, neighbor_ports, cost_list):
-            each.append([i, n, c])
+            each_pair.append([i, n, c])
             a += 1
-        router_dictionary[router_num] = each
+
+        # Dictionary format as {id: [[inputs, port, cost]]
+        router_dictionary[router_num] = each_pair
         self.routing_dictionary = router_dictionary
         print(self.routing_dictionary)
-
-
-    def __str__(self):
-        print("Router Id: {}".format(self.router_id))
-
-    def __repr(self):
-        return self.__str__()
-
 
 
 # Read the router config file
@@ -62,11 +60,12 @@ def read_router_file(filename):
     router_num = 1
     input_list = []
     output_list = []
-
     content_list = []
+
     # open the file and read the lines
     router_file = open(filename, 'r')
     router_contents = router_file.readlines()
+
     # for the contents in the file, get the router_id, input_ports and output ports
     for router_content in router_contents:
         router_content = re.split(", | |\n", router_content)
@@ -75,6 +74,7 @@ def read_router_file(filename):
 
     # For the each in content list
     for contents in content_list:
+
         # Taking the router id
         if "router-id" in contents:
             try:
@@ -82,6 +82,7 @@ def read_router_file(filename):
             except ValueError:
                 print("Invalid router id")
                 sys.exit()
+
         # Taking the input ports
         if "input-ports" in contents:
             try:
@@ -93,13 +94,11 @@ def read_router_file(filename):
             except ValueError:
                 print("Invalid input ports/ No input ports found")
                 sys.ext()
+
         # Taking the output ports
         if "outputs" in contents:
             try:
-                output_nums = []
-                output_slice = []
                 output_list = contents[1:]
-                #print(output_list)
             except ValueError:
                 print("Invalid outputs")
                 sys.exit()
@@ -107,20 +106,16 @@ def read_router_file(filename):
 
 
 def main():
-
     # Take the system argument 1 for txt file
     try:
         router_file = sys.argv[1]
     except IndexError:
         print("You did not specify a file")
         sys.exit(1)
-
     # read config file
     router_id, input_ports, outputs = read_router_file(router_file)
-
     # calling the main class
     router = Main(router_id, input_ports, outputs)
-
     # Print the routing table of the router
     router.parse_routing_dictionary(router_file)
 
