@@ -1,13 +1,6 @@
 import sys
 import re
 
-
-# input port instance router listen to
-# output how to reach rich neighbor
-# send data to neighbor poisoined reverse
-# listen to if the neighbor sends data to the router and update roouting table
-
-
 class Main:
     # execute when the class is being initiated
     def __init__(self, router_id, input_ports, outputs):
@@ -15,7 +8,6 @@ class Main:
         self.input_ports = input_ports
         self.outputs = outputs
         self.routing_dictionary = {}
-
 
     # Human-readable routing dictionary returned that can be printed in terminal
     def parse_routing_dictionary(self, file):

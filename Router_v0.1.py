@@ -12,12 +12,14 @@ import sys
 import config
 
 class Server:
+    # clarify for me what is the address, port, owner? you mean id, input and output
     def __init__(self, address, port, owner):
         self.receiver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # socket to receive
         host = 'localhost', port
         self.port = port
         self.receiver.bind(host)
         self.owner = owner  # the router which owns this port
+
 
     def fileno(self):  # required for select
         return self.receiver.fileno()
@@ -28,16 +30,15 @@ class Server:
         self.owner.recv_msg(message, self.port)
 
 
-class Router(object):
+class Router():
     " will initialize the configuration class. The paramaters are used since it is required"
-    def __init__(self, config_file):
-        self.config_file = config_file
+    def __init__(self, router_id):
+
         self.router_id = router_id
         self.links = []
         self.f_table = {}
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Socket to send
 
-        print(self.config_file)
 
     def add_link(self, link):
         self.links.append(link)
@@ -78,8 +79,8 @@ class Router(object):
 #               '6':[[6661, 6665], [1116, 5556]],
 #               '7': [[7771, 7774], [1117, 4447]]}
 
-#test_routers = {'1': [(5000, 5001, 8)],
-#               '2': [(5001, 5000, 8)]}  # dictionary format {id: [(input, output, cost], (link2))]}
+test_routers = {'1': [(5000, 5001, 8)],
+               '2': [(5001, 5000, 8)]}  # dictionary format {id: [(input, output, cost], (link2))]}
 
 def main():
     """I run the show around here!"""
@@ -91,11 +92,15 @@ def main():
         router_id, inputs, outputs = config.read_router_file(router_file)
         router = config.Main(router_id, inputs, outputs)
         router_config = router.parse_routing_dictionary(router_file)
+
         if not router_config:
             sys.exit("Invalid configuration file")
-        else:
-            print("Configuration has been loaded!")
-            Router(router_config)
+        print("Configuration has been loaded!")
+
+        # cannot implement server as it got three argument atm
+        # Server(address, port, owner)
+        # Router(router_id)
+
     except IndexError:
         sys.exit("Argument is invalid!")
 
