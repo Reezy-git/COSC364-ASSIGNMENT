@@ -41,7 +41,8 @@ class Main:
         return self.routing_dictionary
 
 
-# Read the router config file
+# Read the router config file to grab everything for the router
+# format eg. 1 [116,1112,1117] [[2221,2,2, 66661,5,6]]
 def read_router_file(filename):
     router_num = 1
     input_list = []

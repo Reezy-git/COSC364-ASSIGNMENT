@@ -11,16 +11,18 @@ import sys
 # import config file
 import config
 
-# Start up a UDP socket and bind it
 # https://pythontic.com/modules/socket/udp-client-server-example
+# class Server will run on UDP and Receive data and send reply
 class Server:
-    # clarify for me what is the address, port, owner? you mean id, input and output
+    # Initialize udp socket and grab the dictionary file
     def __init__(self, address, port, owner):
         self.receiver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # socket to receive
-        host = 'localhost', port
+        self.receiver.bind(('localhost', port))
+
+        self.address = address
         self.port = port
-        self.receiver.bind(host)
-        self.owner = owner  # the router which owns this port
+        self.owner = owner
+
 
 
     def fileno(self):  # required for select
@@ -31,16 +33,37 @@ class Server:
         print('Send to ', self.owner)
         self.owner.recv_msg(message, self.port)
 
+# Router class will send data and receive reply
+# Comes here first
 class Router():
     """ will initialize the configuration class. The paramaters are used since it is required"""
-    def __init__(self, router_id):
+    """def __init__(self, router_id):
         self.router_id = router_id
         self.links = []
         self.forwarding_table = {}
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Socket to send
-
+    
     def add_link(self, link):
         self.links.append(link)
+    
+    """
+    def __init__(self, parsed_file):
+        #dictionary from config
+        self.parsed_file = parsed_file
+        self.neighbor_port = 0
+        self.cost = 0
+
+    def print_info(self):
+        input_ports = []
+        routing_dictionary = self.parsed_file
+        for key in routing_dictionary.keys():
+            router_id = key
+        for lists in routing_dictionary.values():
+            for list in lists:
+                input, output, id = list[0], list[1], list[2]
+                input_ports.append(input)
+        pass
+        #print(input_ports)
 
     # Display the information of the routing dictionary
     def __str__(self):
@@ -50,13 +73,13 @@ class Router():
         table_format += "Router Inputs: " + str(self.input_ports) + "\n"
         table_format += f"{'Router Id':<15}{'Port':>6}{'Cost':>20}{'Next Hop':>21}"
         table_format += "\n" + "=" * 62 + "\n"
-        for key, value in sorted(self.routing_dictionary.items()):
+        for key, value in sorted(self.parsed_file.items()):
             port, cost = value
             table_format += "{:<12} {:>6}  {:>20} \n".format(key, port, cost)
         print(table_format)
 
     def __repr(self):
-        return self.__str__()
+       return self.__str__()
 
     def recv_msg(self, msg, port):
         msg_dst = msg[0:8]
@@ -90,18 +113,30 @@ def main():
 
         router_file = sys.argv[1]
         router_id, inputs, outputs = config.read_router_file(router_file)
-        router = config.Main(router_id, inputs, outputs)
+        config_file = config.Main(router_id, inputs, outputs)
+        router_parse = config_file.parse_routing_dictionary(router_file)
 
-        if not router:
+        if not config_file:
             sys.exit("Invalid configuration file")
         print("Configuration has been loaded!")
-        # Read the router ID from grabbing it from Main
-        route = Router(router_id) # grabbing the router_id
 
+        # Read the router ID from grabbing it from Main
+        router = Router(router_parse) # grabbing the router id
+        router.print_info()
+        #server = Server(router_id, inputs, outputs)
     except IndexError:
         sys.exit("Argument is invalid!")
 
-
-
+    '''
+    servers = []
+    routers = []
+    i = 0
+    for router in test_routers:
+        routers.append(Router(router))
+        for link in test_routers[router]:
+            servers.append(Server('localhost', int(link[0]), routers[i]))
+            routers[i].add_link(link)
+        i += 1
+    '''
 
 main()
