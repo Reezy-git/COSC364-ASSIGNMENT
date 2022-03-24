@@ -12,17 +12,36 @@ import sys
 import config
 
 # https://pythontic.com/modules/socket/udp-client-server-example
-# class Server will run on UDP and Receive data and send reply
+"""
+Class: Server
+Create a UDP socket.
+Bind the socket to the server address.
+Wait until the datagram packet arrives from the client.
+Process the datagram packet and send a reply to the client.
+Go back to Step 3.
+"""
 class Server:
     # Initialize udp socket and grab the dictionary file
-    def __init__(self, address, port, owner):
+    def __init__(self, owner, address, port):
+        # Create a udp socket
         self.receiver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # socket to receive
-        self.receiver.bind(('localhost', port))
+        # Bind the socket to the server address
+        #self.receiver.bind(('localhost', port))
 
+        """
+        Attributes:
+        Address: Input port of Sending router
+        Port: Neighbor port it will send to
+        Owner: Neighbor Id
+        """
         self.address = address
-        self.port = port
         self.owner = owner
-
+        self.port = port #[[1112, 1, 1]]
+        #for ports in self.port:
+        #   for output, id, cost in self.port:
+        #       neighbor_port, neighbor_cost, neighbor_id = output, cost, id
+        self.hop = 0
+        self.next_hop = 1
 
 
     def fileno(self):  # required for select
@@ -33,37 +52,42 @@ class Server:
         print('Send to ', self.owner)
         self.owner.recv_msg(message, self.port)
 
-# Router class will send data and receive reply
-# Comes here first
+
+"""
+Class: Router
+Create a UDP socket.
+Send a message to the server.
+Wait until response from the server is received.
+Process reply and go back to step 2, if necessary.
+Close socket descriptor and exit.
+"""
 class Router():
     """ will initialize the configuration class. The paramaters are used since it is required"""
-    """def __init__(self, router_id):
-        self.router_id = router_id
+    # initialize the router
+    def __init__(self, parsed_file):
+        #self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # Socket to send
         self.links = []
         self.forwarding_table = {}
-        self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Socket to send
-    
-    def add_link(self, link):
-        self.links.append(link)
-    
-    """
-    def __init__(self, parsed_file):
-        #dictionary from config
+        # router dictionary from config.py
         self.parsed_file = parsed_file
-        self.neighbor_port = 0
-        self.cost = 0
-
-    def print_info(self):
-        input_ports = []
         routing_dictionary = self.parsed_file
+        # grabbing the router_id of the router
         for key in routing_dictionary.keys():
             router_id = key
-        for lists in routing_dictionary.values():
-            for list in lists:
-                input, output, id = list[0], list[1], list[2]
+        self.router_id = router_id
+
+        input_ports = []
+        for value in routing_dictionary.items():
+            value = value[1]
+            for input, port, output in value:
+                input_port = input
                 input_ports.append(input)
-        pass
-        #print(input_ports)
+        self.input_ports = input_port
+
+
+
+    def add_link(self, link):
+        self.links.append(link)
 
     # Display the information of the routing dictionary
     def __str__(self):
@@ -73,9 +97,13 @@ class Router():
         table_format += "Router Inputs: " + str(self.input_ports) + "\n"
         table_format += f"{'Router Id':<15}{'Port':>6}{'Cost':>20}{'Next Hop':>21}"
         table_format += "\n" + "=" * 62 + "\n"
-        for key, value in sorted(self.parsed_file.items()):
-            port, cost = value
-            table_format += "{:<12} {:>6}  {:>20} \n".format(key, port, cost)
+        """
+        cost = Server.cost
+        for key, value in sorted(self.parsed_file):
+            value = value[1]
+            for input, port, output in value:
+                table_format += "{:<12} {:>6}  {:>20} \n".format(key, port, , cost)
+        """
         print(table_format)
 
     def __repr(self):
@@ -119,11 +147,11 @@ def main():
         if not config_file:
             sys.exit("Invalid configuration file")
         print("Configuration has been loaded!")
-
         # Read the router ID from grabbing it from Main
-        router = Router(router_parse) # grabbing the router id
-        router.print_info()
-        #server = Server(router_id, inputs, outputs)
+        router = Router(router_parse)
+        print("Start router:", str(router_id))
+        server = Server(router_id, inputs, outputs)
+
     except IndexError:
         sys.exit("Argument is invalid!")
 
