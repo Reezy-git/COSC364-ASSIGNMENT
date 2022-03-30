@@ -24,7 +24,7 @@ class Server:
 
     def on_read(self):  # the method for receiving a message
         message = self.receiver.recv(1024).decode('utf-8')
-        print('Send to ', self.owner)
+        #print('Send to ', self.owner)
         self.owner.recv_msg(message, self.port)
 
 
