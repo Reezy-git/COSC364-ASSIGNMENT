@@ -63,6 +63,8 @@ test_routers = {'1': [(5000, 5001, 8), (5011, 41241, 8)]}  # dictionary format {
 
 def main():
     """I run the show around here!"""
+
+
     servers = []  # create a list to hold servers
     routers = []  # create a list
     i = 0
