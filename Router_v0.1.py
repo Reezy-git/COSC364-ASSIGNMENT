@@ -32,14 +32,14 @@ class Router:
     def __init__(self, router_id):
         self.router_id = router_id
         self.links = []
-        self.f_table = {1: (5000, 8), 2: (5001, 2)}  # forwarding table
+        self.f_table = {router_id: (0, 0)}  # forwarding table
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Socket to send
 
     def __str__(self):
         table_format = "=" * 18
         table_format += " RIPv2 Routing Table of " + str(self.router_id) + " "
         table_format += "=" * 18 + "\n"
-        table_format += "Router Inputs: " + str(self.links) + "\n"
+        table_format += "Router Inputs: " + str(self.links) + "\n"  # we need to print forwarding table not links
         print(table_format)
 
     def __repr__(self):
@@ -57,8 +57,10 @@ class Router:
             if self.f_table.__contains__(msg_dst):
                 self.sender.sendto(msg, self.f_table[msg_dst][0])
 
-    def update_f_table(self, new_info):
+    def update_f_table(self, new_info, link):
         """todo: write me"""
+        # check if ID in dictionary, if not add to dictionary with port and cost from link + cost listed
+        # if in dictionary see if cost is lower and update appropriately
 
 
 # router_info ={'1': [[1112, 1116, 1117], [2221, 7777, 6666]],
