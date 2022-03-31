@@ -80,17 +80,16 @@ class Router:
         print('link not found')
 
     def update_f_table(self, new_info, link):
-        """todo: write me"""
-        base_cost = link[2]
+        base_cost = link[2]  # Get the cost of the link.
         for dest in new_info:
-            if dest in self.f_table:
+            if dest in self.f_table:  # See if we have info on the router.
                 current_best = self.f_table[dest][1]
                 new_potential_cost = new_info[dest][1] + base_cost
-                if current_best > new_potential_cost:
+                if current_best > new_potential_cost:  # If this is a better route we change our table entries.
                     self.f_table[dest] = (link[1], new_potential_cost)
             else:
                 cost = new_info[dest][1] + base_cost
-                self.f_table[dest] = (link[1], cost)
+                self.f_table[dest] = (link[1], cost)  # We didn't have a route to here. So we just take any route info.
 
     @staticmethod
     def pkt_build(dst, typ, body):
