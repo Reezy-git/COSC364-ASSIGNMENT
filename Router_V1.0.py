@@ -32,37 +32,65 @@ class Router:
     def __init__(self, router_id):
         self.router_id = router_id
         self.links = []
-        self.f_table = {router_id: (0, 0)}  # forwarding table
+        self.f_table = {self.router_id: (0, 0)}  # forwarding table
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Socket to send
+        self.active = True
 
     def add_link(self, link):
         self.links.append(link)  # link = (input, output, cost)
 
+    def toggle_activity(self):
+        """Turns router on/off and resets the f_table"""
+        self.active = not self.active
+        self.f_table = {self.router_id: (0, 0)}
+
     def recv_msg(self, msg, port):
+        if self.active:  # if router is active, process message as normal
+            self.process_msg(msg, port)
+        else:  # if router is not active check to see if packet type is activity toggle and turn back on if so.
+            if int(msg[6:8], 2) == 3:
+                self.toggle_activity()
+
+    def process_msg(self, msg, port):
         try:
             if str(int(msg[:6], 2)) == self.router_id or str(int(msg[:6], 2)) == '0':
                 print(str(int(msg[:6], 2)))
                 msg_dst, typ, body = self.pkt_unravel(msg)
                 if typ == 0:
                     print('Update f_table with', body)
+                    self.update_f_table(body, self.get_link(port))
                 if typ == 1:
                     print('Router', self.router_id, 'received message', body)
                 if typ == 2:
-                    # print the f_table
-                    pass
+                    print(self.f_table)
                 if typ == 3:
-                    # maybe disable router?
-                    pass
+                    self.toggle_activity()
             else:
                 msg_dst = str(int(msg[:6], 2))
                 print('Router', self.router_id, 'received message to forward to router', msg_dst)
-                if self.f_table.__contains__(msg_dst):
-                    self.sender.sendto(msg, self.f_table[msg_dst][0])
+                # if self.f_table.__contains__(msg_dst):
+                #     self.sender.sendto(msg, self.f_table[msg_dst][0])
         except ValueError:
             print('Incorrect message format received at Router ID:', self.router_id)
 
-    def update_f_table(self, new_info):
+    def get_link(self, port):
+        for link in self.links:
+            if link[0] == port:
+                return link
+        print('link not found')
+
+    def update_f_table(self, new_info, link):
         """todo: write me"""
+        base_cost = link[2]
+        for dest in new_info:
+            if dest in self.f_table:
+                current_best = self.f_table[dest][1]
+                new_potential_cost = new_info[dest][1] + base_cost
+                if current_best > new_potential_cost:
+                    self.f_table[dest] = (link[1], new_potential_cost)
+            else:
+                cost = new_info[dest][1] + base_cost
+                self.f_table[dest] = (link[1], cost)
 
     @staticmethod
     def pkt_build(dst, typ, body):
