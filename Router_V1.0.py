@@ -1,6 +1,6 @@
 
 """A basic router for RIP implementation
-todo: Router: define f_table(forwarding table), write __str__ to print f_table, write recv_msg
+todo: Router: write __str__ to print f_table, write broadcasting function
 todo: Main: implement config reader and use to create server and router objects"""
 
 
@@ -24,7 +24,6 @@ class Server:
 
     def on_read(self):  # the method for receiving a message
         message = self.receiver.recv(1024).decode('utf-8')
-        print('Send to ', self.owner)
         self.owner.recv_msg(message, self.port)
 
 
@@ -54,7 +53,6 @@ class Router:
     def process_msg(self, msg, port):
         try:
             if str(int(msg[:6], 2)) == self.router_id or str(int(msg[:6], 2)) == '0':
-                print(str(int(msg[:6], 2)))
                 msg_dst, typ, body = self.pkt_unravel(msg)
                 if typ == 0:
                     print('Update f_table with', body)
@@ -68,8 +66,9 @@ class Router:
             else:
                 msg_dst = str(int(msg[:6], 2))
                 print('Router', self.router_id, 'received message to forward to router', msg_dst)
-                # if self.f_table.__contains__(msg_dst):
-                #     self.sender.sendto(msg, self.f_table[msg_dst][0])
+                if self.f_table.__contains__(msg_dst):
+                    target = 'localhost', self.f_table[msg_dst][0]
+                    self.sender.sendto(msg, target)
         except ValueError:
             print('Incorrect message format received at Router ID:', self.router_id)
 
@@ -77,7 +76,7 @@ class Router:
         for link in self.links:
             if link[0] == port:
                 return link
-        print('link not found')
+        print('[ERROR]: Link not found')
 
     def update_f_table(self, new_info, link):
         base_cost = link[2]  # Get the cost of the link.
