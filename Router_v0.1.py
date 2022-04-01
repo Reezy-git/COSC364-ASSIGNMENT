@@ -57,6 +57,7 @@ class Router:
         self.active = not self.active
         self.f_table = {self.router_id: (0, 0)}
 
+    # check if active and then process_msg
     def recv_msg(self, msg, port):
         if self.active:  # if router is active, process message as normal
             self.process_msg(msg, port)
@@ -96,7 +97,6 @@ class Router:
         # check if forwarding table has the dictionary in it -  link from link function and new info
         # check if ID in dictionary, if not add to dictionary with port and cost from link + cost listed
         # if in dictionary see if cost is lower and update appropriately
-
         base_cost = link[2]  # Get the cost of the link.
         for dest in new_info:
             if dest in self.f_table:  # See if we have info on the router.

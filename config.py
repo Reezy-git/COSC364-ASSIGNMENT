@@ -18,7 +18,7 @@ class Main:
 
         # Grabbing the router id, new input and output list
         router_num, new_input_list, output_slice = read_router_file(file)
-        self.router_id = router_num
+        self.router_id = str(router_num)
         self.input_ports = new_input_list
         self.outputs = output_slice
 
@@ -32,13 +32,13 @@ class Main:
             cost_list.append(cost)
         a = 0
         for i, c, n in zip(new_input_list, neighbor_ports, cost_list):
-            each_pair.append([i, n, c])
+            each_pair.append([i, c, n])
             a += 1
 
         # Dictionary format as {id: [[inputs, port, cost]]
-        router_dictionary[router_num] = each_pair
+        router_dictionary[str(router_num)] = each_pair
         self.routing_dictionary = router_dictionary
-        return self.routing_dictionary
+        print(self.routing_dictionary)
 
 
 # Read the router config file to grab everything for the router
