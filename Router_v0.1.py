@@ -36,18 +36,17 @@ class Router:
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Socket to send
         self.active = True
 
-    def __str__(self):
+    def __str__(self, table):
         """Prints out the forwarding table """
         table_format = "=" * 18
         table_format += " RIPv2 Routing Table of " + str(self.router_id) + " "
         table_format += "=" * 18 + "\n"
-        table_format += "Router Inputs: " + str(self.links) + "\n"
         table_format += f"{'Router Id':<15}{'Port':>6}{'Cost':>20}"
         table_format += "\n" + "=" * 62 + "\n"
-        for key, value in sorted(self.f_table.items()):
+        for key, value in sorted(table.items()):
             port, cost = value
             table_format += "{:<12} {:>6}  {:>20} \n".format(key, port, cost)
-        print(table_format)
+        return table_format
 
     def add_link(self, link):
         self.links.append(link)  # link = (input, output, cost)
@@ -75,7 +74,8 @@ class Router:
                 if typ == 1:
                     print('Router', self.router_id, 'received message', body)
                 if typ == 2:
-                    print(self.f_table)
+                    print(self.__str__(self.f_table))
+                    #print(self.f_table)
                 if typ == 3:
                     self.toggle_activity()
             else:
@@ -94,9 +94,7 @@ class Router:
         print('[ERROR]: Link not found')
 
     def update_f_table(self, new_info, link):
-        # check if forwarding table has the dictionary in it -  link from link function and new info
-        # check if ID in dictionary, if not add to dictionary with port and cost from link + cost listed
-        # if in dictionary see if cost is lower and update appropriately
+        # add cost
         base_cost = link[2]  # Get the cost of the link.
         for dest in new_info:
             if dest in self.f_table:  # See if we have info on the router.
@@ -145,7 +143,6 @@ def main():
         for link in router_parse[router]:
             servers.append(Server('localhost', int(link[0]), routers[i]))
             routers[i].add_link(link)
-        route.__str__()
         i += 1
 
     while True:

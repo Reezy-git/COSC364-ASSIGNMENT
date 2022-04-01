@@ -38,7 +38,7 @@ class Main:
         # Dictionary format as {id: [[inputs, port, cost]]
         router_dictionary[str(router_num)] = each_pair
         self.routing_dictionary = router_dictionary
-        print(self.routing_dictionary)
+        return(self.routing_dictionary)
 
 
 # Read the router config file to grab everything for the router
