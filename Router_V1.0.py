@@ -68,7 +68,7 @@ class Router:
                 print('Router', self.router_id, 'received message to forward to router', msg_dst)
                 if self.f_table.__contains__(msg_dst):
                     target = 'localhost', self.f_table[msg_dst][0]
-                    self.sender.sendto(msg, target)
+                    self.sender.sendto(msg.encode('utf8'), target)
         except ValueError:
             print('Incorrect message format received at Router ID:', self.router_id)
 
