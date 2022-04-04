@@ -108,14 +108,16 @@ class Router:
         for dest in new_info:
             if dest in self.f_table:  # See if we have info on the router.
                 current_best = self.f_table[dest][1]
-                new_potential_cost = new_info[dest][1] + base_cost
-                if current_best > new_potential_cost:  # If this is a better route we change our table entries.
-                    self.f_table[dest] = (link[1], new_potential_cost)
-                # if max cost
-                if new_potential_cost >= max_cost:
-                    self.f_table[dest] = (link[1], max_cost)
+                if current_best < 16:
+                    new_potential_cost = new_info[dest][1] + base_cost
+                    if current_best > new_potential_cost:  # If this is a better route we change our table entries.
+                        self.f_table[dest] = (link[1], new_potential_cost)
+                current_best = max_cost
+                self.f_table[dest] = (link[1], current_best)
             else:
                 cost = new_info[dest][1] + base_cost
+                if cost >= max_cost:
+                    self.f_table[dest] = (link[1], max_cost)
                 self.f_table[dest] = (link[1], cost)  # We didn't have a route to here. So we just take any route info.
 
     @staticmethod
