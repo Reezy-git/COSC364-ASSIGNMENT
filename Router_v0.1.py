@@ -38,6 +38,7 @@ class Router:
 
     def __str__(self, table):
         """Prints out the forwarding table """
+        max_cost = 16
         table_format = "=" * 18
         table_format += " RIPv2 Routing Table of " + str(self.router_id) + " "
         table_format += "=" * 18 + "\n"
@@ -45,7 +46,9 @@ class Router:
         table_format += "\n" + "=" * 62 + "\n"
         for key, value in sorted(table.items()):
             port, cost = value
-            table_format += "{:<12} {:>6}  {:>20} \n".format(key, port, cost)
+            if cost == max_cost:
+                table_format += "{:<12}{:>9}{:>20} \n".format(key, port, '*')
+            table_format += "{:<12}{:>9}{:>20} \n".format(key, port, cost)
         return table_format
 
     def add_link(self, link):
@@ -68,14 +71,18 @@ class Router:
         try:
             if str(int(msg[:6], 2)) == self.router_id or str(int(msg[:6], 2)) == '0':
                 msg_dst, typ, body = self.pkt_unravel(msg)
+                # Request Type 0: Updating Forward Table
                 if typ == 0:
-                    print('Update f_table with', body)
+                    print('Update forwarding table with', body)
                     self.update_f_table(body, self.get_link(port))
+                # Request 1: Receive periodic update
                 if typ == 1:
                     print('Router', self.router_id, 'received message', body)
+                # Request 2: Show Forwarding table
                 if typ == 2:
                     print(self.__str__(self.f_table))
                     #print(self.f_table)
+                # Request Type 3: Turn On/Off activity of router
                 if typ == 3:
                     self.toggle_activity()
             else:
@@ -95,13 +102,18 @@ class Router:
 
     def update_f_table(self, new_info, link):
         # add cost
+        max_cost = 16
         base_cost = link[2]  # Get the cost of the link.
+        # dest = destination key
         for dest in new_info:
             if dest in self.f_table:  # See if we have info on the router.
                 current_best = self.f_table[dest][1]
                 new_potential_cost = new_info[dest][1] + base_cost
                 if current_best > new_potential_cost:  # If this is a better route we change our table entries.
                     self.f_table[dest] = (link[1], new_potential_cost)
+                # if max cost
+                if new_potential_cost >= max_cost:
+                    self.f_table[dest] = (link[1], max_cost)
             else:
                 cost = new_info[dest][1] + base_cost
                 self.f_table[dest] = (link[1], cost)  # We didn't have a route to here. So we just take any route info.
