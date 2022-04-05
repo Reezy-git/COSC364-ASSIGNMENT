@@ -36,7 +36,8 @@ def create_message(f_table):
     return msg
 
 
-example_forwarding_table = {2: (3332, 1), 7: (7771, 8), 6: (6661, 5)}
+example_forwarding_table = {'2': (3332, 1), '7': (7771, 8), '6': (6661, 5)}
+
 
 message = create_message(example_forwarding_table)
 

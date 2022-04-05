@@ -1,38 +1,16 @@
-
-"""A basic router for RIP implementation
-todo: Router: write __str__ to print f_table, write broadcasting function
-todo: Main: implement config reader and use to create server and router objects"""
+"""A router with RIP specified protocol"""
 
 
-import socket
-import select
-import threading  # Probably won't be used
-import sys
 import json
-import config
-
-
-class Server:
-    def __init__(self, address, port, owner):
-        self.receiver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # socket to receive
-        host = 'localhost', port
-        self.port = port
-        self.receiver.bind(host)
-        self.owner = owner  # the router which owns this port
-
-    def fileno(self):  # required for select
-        return self.receiver.fileno()
-
-    def on_read(self):  # the method for receiving a message
-        message = self.receiver.recv(1024).decode('utf-8')
-        self.owner.recv_msg(message, self.port)
+import socket
 
 
 class Router:
-    def __init__(self, router_id):
+    def __init__(self, router_id, network_id):
+        self.network_id = network_id
         self.router_id = router_id
         self.links = []
-        self.f_table = {self.router_id: (0, 0)}  # forwarding table
+        self.f_table = {self.router_id: (0, 0)}  # forwarding table {dest: [output, cost]}
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Socket to send
         self.active = True
 
@@ -74,7 +52,7 @@ class Router:
                 msg_dst, typ, body = self.pkt_unravel(msg)
                 # Request Type 0: Updating Forward Table
                 if typ == 0:
-                    print('Update forwarding table with', body)
+                    #print('Update forwarding table with', body)
                     self.update_f_table(body, self.get_link(port))
                 # Request 1: Receive periodic update
                 if typ == 1:
@@ -89,10 +67,31 @@ class Router:
                 msg_dst = str(int(msg[:6], 2))
                 print('Router', self.router_id, 'received message to forward to router', msg_dst)
                 if self.f_table.__contains__(msg_dst):
-                    target = 'localhost', self.f_table[msg_dst][0]
+                    target = self.network_id, self.f_table[msg_dst][0]
                     self.sender.sendto(msg.encode('utf8'), target)
         except ValueError:
             print('Incorrect message format received at Router ID:', self.router_id)
+
+    def broadcast(self):
+        """Sends out the forwarding information we have to our neighbors"""
+        self.changes = False
+        for link in self.links:
+            target = self.network_id, link[1]
+            msg = self.pkt_build(0, 0, self.f_table)
+            self.sender.sendto(msg.encode('utf8'), target)
+
+    def on_tick(self):
+        """responsible for periodic updates"""
+        self.broadcast()
+        for link in self.links:
+            link[3] += 1
+            if link[3] >= 6:
+                self.kill_link(link)
+
+    def kill_link(self, link):
+        for dest in self.f_table:
+            if self.f_table[dest][0] == link[1]:
+                self.f_table[dest] = (link[1], 16)
 
     def get_link(self, port):
         for link in self.links:
@@ -101,25 +100,40 @@ class Router:
         print('[ERROR]: Link not found')
 
     def update_f_table(self, new_info, link):
-        # add cost
+        link[3] = 0  # reset last update value on link as if this reaches over 6 we assume link is dead (see on_tick)
         max_cost = 16
         base_cost = link[2]  # Get the cost of the link.
         # dest = destination key
+        self.changes = False  # tracks if we alter the f_table
         for dest in new_info:
             if dest in self.f_table:  # See if we have info on the router.
                 current_best = self.f_table[dest][1]
-                new_potential_cost = new_info[dest][1] + base_cost
+                # work out new potential cost max = 16
+                if new_info[dest][1] + base_cost <= 16:
+                    new_potential_cost = new_info[dest][1] + base_cost
+                else:
+                    new_potential_cost = 16
                 if current_best < 16:
                     if current_best > new_potential_cost:  # If this is a better route we change our table entries.
                         self.f_table[dest] = (link[1], new_potential_cost)
+                        self.changes = True
                 else:
                     current_best = 16
                     self.f_table[dest] = (link[1], current_best)
+                    self.changes = True
+
+                # if the case is that we use this link as our route we need to update the cost regardless
+                if self.f_table[dest][0] == link[1]:
+                    self.f_table[dest] = (link[1], new_potential_cost)
+                    self.changes = True
             else:
                 cost = new_info[dest][1] + base_cost
                 if cost >= 16:
                     self.f_table[dest] = (link[1], 16)
                 self.f_table[dest] = (link[1], cost)  # We didn't have a route to here. So we just take any route info.
+                self.changes = True
+            if self.changes:  # f_table changed therefore we need to update tell neighbors.
+                self.broadcast()
 
     @staticmethod
     def pkt_build(dst, typ, body):
@@ -135,32 +149,3 @@ class Router:
         typ = int(msg[6:8], 2)
         body = json.loads(bytes.fromhex(hex(int(msg[8:], 2))[2:]))
         return dst, typ, body
-
-
-def main():
-    """I run the show around here!"""
-    servers = []  # create a list to hold servers
-    routers = []  # create a list
-    i = 0
-
-    # Config reader to take the dictionary of the router file
-    router_file = sys.argv[1]
-    router_id, inputs, outputs = config.read_router_file(router_file)
-    config_file = config.Main(router_id, inputs, outputs)
-    router_parse = config_file.parse_routing_dictionary(router_file)
-
-    for router in router_parse:
-        routers.append(Router(router))
-        route = Router(router)
-        for link in router_parse[router]:
-            servers.append(Server('localhost', int(link[0]), routers[i]))
-            routers[i].add_link(link)
-        i += 1
-
-    while True:
-        readers, _, _ = select.select(servers, [], [])  # select takes 3 lists as input we only need first one
-        for reader in readers:
-            reader.on_read()
-
-
-main()
