@@ -82,11 +82,12 @@ class Router:
 
     def on_tick(self):
         """responsible for periodic updates"""
-        self.broadcast()
-        for link in self.links:
-            link[3] += 1
-            if link[3] >= 6:
-                self.kill_link(link)
+        if self.active:
+            self.broadcast()
+            for link in self.links:
+                link[3] += 1
+                if link[3] >= 6:
+                    self.kill_link(link)
 
     def kill_link(self, link):
         for dest in self.f_table:
@@ -122,10 +123,12 @@ class Router:
                     self.f_table[dest] = (link[1], current_best)
                     self.changes = True
 
-                # if the case is that we use this link as our route we need to update the cost regardless
+                # if the case is that we use this link as our route we need to update the cost if it has changed
+                # regardless
                 if self.f_table[dest][0] == link[1]:
-                    self.f_table[dest] = (link[1], new_potential_cost)
-                    self.changes = True
+                    if self.f_table[dest] != (link[1], new_potential_cost):
+                        self.f_table[dest] = (link[1], new_potential_cost)
+                        self.changes = True
             else:
                 cost = new_info[dest][1] + base_cost
                 if cost >= 16:
