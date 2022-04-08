@@ -9,13 +9,14 @@ class Router:
     def __init__(self, router_id, network_id):
         self.network_id = network_id
         self.router_id = router_id
-        self.links = []
+        self.links = []  # (input, output, cost, ticks since last update)
         self.f_table = {self.router_id: (0, 0)}  # forwarding table {dest: [output, cost]}
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Socket to send
         self.active = True
+        self.garbage_can = dict()
 
     def __str__(self, table):
-        """Prints out the forwarding table """
+        """Prints out the forwarding table"""
         max_cost = 16
         table_format = "=" * 18
         table_format += " RIPv2 Routing Table of " + str(self.router_id) + " "
@@ -76,8 +77,12 @@ class Router:
         """Sends out the forwarding information we have to our neighbors"""
         self.changes = False
         for link in self.links:
+            msg_dict = dict()  # a dictionary for routing information to be sent to this link
             target = self.network_id, link[1]
-            msg = self.pkt_build(0, 0, self.f_table)
+            for key, value in self.f_table.items():  # this is split horizon
+                if value[0] != link[1]:  # if the nexthop port is equal to the link output
+                    msg_dict[key] = value
+            msg = self.pkt_build(0, 0, msg_dict)
             self.sender.sendto(msg.encode('utf8'), target)
 
     def on_tick(self):
@@ -88,6 +93,21 @@ class Router:
                 link[3] += 1
                 if link[3] >= 6:
                     self.kill_link(link)
+            self.garbage()
+
+    def garbage(self):
+        """updates the garbage dictionary and if times out delete item"""
+        to_delete = []
+        for key in self.garbage_can:
+            value = self.garbage_can[key]
+            self.garbage_can[key] = value + 1
+            if value > 9:
+                to_delete.append(key)
+        for key in to_delete:
+            self.f_table.__delitem__(key)
+            self.garbage_can.__delitem__(key)
+
+
 
     def kill_link(self, link):
         for dest in self.f_table:
@@ -100,7 +120,12 @@ class Router:
                 return link
         print('[ERROR]: Link not found')
 
+
+
     def update_f_table(self, new_info, link):
+        """Updates the forwarding table.
+        If a change is made to the forwarding table self.changes is toggled to True
+        self.changes is used for our implementation of triggered updates"""
         link[3] = 0  # reset last update value on link as if this reaches over 6 we assume link is dead (see on_tick)
         max_cost = 16
         base_cost = link[2]  # Get the cost of the link.
@@ -114,14 +139,13 @@ class Router:
                     new_potential_cost = new_info[dest][1] + base_cost
                 else:
                     new_potential_cost = 16
-                if current_best < 16:
-                    if current_best > new_potential_cost:  # If this is a better route we change our table entries.
-                        self.f_table[dest] = (link[1], new_potential_cost)
-                        self.changes = True
-                else:
-                    current_best = 16
-                    self.f_table[dest] = (link[1], current_best)
+                if new_potential_cost < current_best:  # If this is a better route we change our table entries.
+                    self.f_table[dest] = (link[1], new_potential_cost)
                     self.changes = True
+                    try:
+                        self.garbage_can.__delitem__(dest)
+                    except KeyError:
+                        continue
 
                 # if the case is that we use this link as our route we need to update the cost if it has changed
                 # regardless
@@ -129,12 +153,13 @@ class Router:
                     if self.f_table[dest] != (link[1], new_potential_cost):
                         self.f_table[dest] = (link[1], new_potential_cost)
                         self.changes = True
+                        if new_potential_cost == 16:
+                            self.garbage_can[dest] = 0  # add to key to garbage can
             else:
                 cost = new_info[dest][1] + base_cost
-                if cost >= 16:
-                    self.f_table[dest] = (link[1], 16)
-                self.f_table[dest] = (link[1], cost)  # We didn't have a route to here. So we just take any route info.
-                self.changes = True
+                if cost < 16:
+                    self.f_table[dest] = (link[1], cost)  # We didn't have a route to here. So we just take any route info.
+                    self.changes = True
             if self.changes:  # f_table changed therefore we need to update tell neighbors.
                 self.broadcast()
 

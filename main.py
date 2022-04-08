@@ -14,7 +14,7 @@ def setup():
     routers = []  # create a list
     tickers = []
     network_id = 'localhost'
-    tick_duration = 3
+    tick_duration = 1  # every tick broadcast every 6 ticks if no message kill link
 
     # Config reader to take the dictionary of the router file
     router_file = sys.argv[1]
