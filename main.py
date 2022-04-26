@@ -1,4 +1,12 @@
-"""Run me with ROUTERFILE.txt to start a router."""
+"""
+ main.py: Run me with router_class.txt to start a router.
+
+ COSC364 RIP2 Assignment
+
+ Author:
+ - Richard Hodges ()
+ - Chrystel Claire Quirimit (63369627)
+ """
 
 import select
 import sys
@@ -22,6 +30,8 @@ def setup():
     config_file = config.Main(router_id, inputs, outputs)
     router_parse = config_file.parse_routing_dictionary(router_file)
 
+    # Find the router that was given in the argument and grab the link it wants to connect
+    # Start the timer
     i = 0
     for router in router_parse:
         routers.append(router_class.Router(router, network_id))
@@ -35,7 +45,7 @@ def setup():
 
 
 def main():
-    """I run the show around here!"""
+    """Run's the program """
     servers, tickers = setup()
 
     for ticker in tickers:
@@ -46,6 +56,6 @@ def main():
         for reader in readers:
             reader.on_read()
 
-
+# Call the program
 main()
 

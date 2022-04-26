@@ -1,3 +1,15 @@
+"""
+ timer.py: Periodic Timer Event.
+
+ COSC364 RIP2 Assignment
+
+ Author:
+ - Richard Hodges ()
+ - Chrystel Claire Quirimit (63369627)
+
+"""
+
+
 import threading
 
 
