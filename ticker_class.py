@@ -1,5 +1,5 @@
 """
- timer.py: Periodic Timer Event.
+ ticker.py: Periodic Timer Event.
 
  COSC364 RIP2 Assignment
 
