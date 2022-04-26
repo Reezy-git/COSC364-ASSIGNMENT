@@ -4,7 +4,7 @@
  COSC364 RIP2 Assignment
 
  Author:
- - Richard Hodges ()
+ - Richard Hodges (11139316)
  - Chrystel Claire Quirimit (63369627)
 
 """
