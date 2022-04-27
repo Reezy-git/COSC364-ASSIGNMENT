@@ -12,6 +12,7 @@
 import json
 import socket
 
+
 class Router:
     """ Router class represents the router """
 
@@ -35,7 +36,7 @@ class Router:
         table_format += "\n" + "=" * 62 + "\n"
         for key, value in sorted(table.items()):
             port, cost = value
-            if cost >= max_cost: # if cost is more than max cost of 16
+            if cost >= max_cost:  # if cost is more than max cost of 16
                 table_format += "{:<12}{:>9}{:>20} \n".format(key, port, '*')
             else:
                 table_format += "{:<12}{:>9}{:>20} \n".format(key, port, cost)
@@ -49,7 +50,6 @@ class Router:
         """Turns router on/off and resets the f_table"""
         self.active = not self.active
         self.f_table = {self.router_id: (0, 0)}
-
 
     def recv_msg(self, msg, port):
         """ check if active and then process the message (process_msg) """
@@ -76,7 +76,7 @@ class Router:
                 # Request Type 3: Turn On/Off activity of router
                 if typ == 3:
                     self.toggle_activity()
-            else: # ask richard for the else statement and if statement
+            else:  # ask richard for the else statement and if statement
                 msg_dst = str(int(msg[:6], 2))
                 print('Router', self.router_id, 'received message to forward to router', msg_dst)
                 if self.f_table.__contains__(msg_dst):
@@ -132,7 +132,6 @@ class Router:
                 return link
         print('[ERROR]: Link not found')
 
-
     def update_f_table(self, new_info, link):
         """Updates the forwarding table.
         If a change is made to the forwarding table self.changes is toggled to True
@@ -154,7 +153,7 @@ class Router:
                 if new_potential_cost < current_best:  # If this is a better route we change our table entries.
                     self.f_table[dest] = (link[1], new_potential_cost)
                     self.changes = True
-                    try: # put in garbage can if the new cost is less than our current best *
+                    try:  # put in garbage can if the new cost is less than our current best *
                         self.garbage_can.__delitem__(dest)
                     except KeyError:
                         continue
@@ -167,10 +166,11 @@ class Router:
                         self.changes = True
                         if new_potential_cost == max_cost:
                             self.garbage_can[dest] = 0  # add key to garbage can
-            else: # if no other info, if new cost hasnt reached max, we can change it
+            else:  # if no other info, if new cost hasnt reached max, we can change it
                 cost = new_info[dest][1] + base_cost
                 if cost < max_cost:
-                    self.f_table[dest] = (link[1], cost)  # We didn't have a route to here. So we just take any route info.
+                    self.f_table[dest] = (
+                    link[1], cost)  # We didn't have a route to here. So we just take any route info.
                     self.changes = True
             if self.changes:  # f_table gets changed therefore we need to update tell neighbors.
                 self.broadcast()
