@@ -100,20 +100,20 @@ class Router:
     def on_tick(self):
         """ timer responsible for periodic updates """
         if self.active:
-            self.broadcast()
+            self.broadcast()  # every tick we broadcast our forwarding capabilities
             for link in self.links:
-                link[3] += 1
-                if link[3] >= 6:
+                link[3] += 1  # link[3] is the time since last update
+                if link[3] >= 6:  # 6 ticks with no contact means we assume station is offline or unreachable
                     self.kill_link(link)
             self.garbage()
 
     def garbage(self):
         """updates the garbage dictionary and if times out delete item"""
-        to_delete = []
+        to_delete = []  # items eligible for deletion
         for key in self.garbage_can:
             value = self.garbage_can[key]
             self.garbage_can[key] = value + 1
-            if value > 9:
+            if value > 9:  # after 10 ticks in the garbage can we flag item as eligible for deletion
                 to_delete.append(key)
         for key in to_delete:
             self.f_table.__delitem__(key)
@@ -186,7 +186,7 @@ class Router:
     @staticmethod
     def pkt_unravel(msg):
         """ Packet gets to be unravelled return each formatted part of the packet"""
-        dst = str(int(msg[:6], 2))
-        typ = int(msg[6:8], 2)
-        body = json.loads(bytes.fromhex(hex(int(msg[8:], 2))[2:]))
+        dst = str(int(msg[:6], 2))  # first 6 digits represent destin
+        typ = int(msg[6:8], 2)  # digits 7 & 8 for type = 4 possible types
+        body = json.loads(bytes.fromhex(hex(int(msg[8:], 2))[2:]))  # remainder are the body
         return dst, typ, body
