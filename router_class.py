@@ -22,7 +22,7 @@ class Router:
         self.links = []  # (input, output, cost, ticks since last update)
         self.f_table = {self.router_id: (0, 0)}  # forwarding table {destination: [output, cost]}
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # Socket to send
-        self.active = True # router is running
+        self.active = True  # router is running
         self.garbage_can = dict()
 
     def __str__(self, table):
