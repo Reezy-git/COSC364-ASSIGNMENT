@@ -62,7 +62,7 @@ class Router:
 
     def process_msg(self, msg, port):
         """ Process the message by taking the message and port number the message was received on
-        first checks destination of the message and then checks message type form the msg header""
+        first checks destination of the message and then checks message type form the msg header"""
         try:
             if str(int(msg[:6], 2)) == self.router_id or str(int(msg[:6], 2)) == '0':
                 msg_dst, typ, body = self.pkt_unravel(msg)
