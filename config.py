@@ -88,7 +88,7 @@ def read_router_file(filename):
                     sys.exit()
             except ValueError:
                 print("Invalid input ports/ No input ports found")
-                sys.ext()
+                sys.exit()
         if "outputs" in contents: # take output ports if it exists
             try:
                 output_list = contents[1:]

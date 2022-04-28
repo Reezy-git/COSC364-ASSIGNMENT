@@ -25,7 +25,11 @@ def setup():
     tick_duration = 1  # every tick broadcast every 6 ticks if no message kill link
 
     # Config reader to take the dictionary of the router file
-    router_file = sys.argv[1]
+    try:
+        router_file = sys.argv[1]
+    except ValueError:
+        print("Invalid file")
+        sys.exit(1)
     router_id, inputs, outputs = config.read_router_file(router_file)
     config_file = config.Main(router_id, inputs, outputs)
     router_parse = config_file.parse_routing_dictionary(router_file)
