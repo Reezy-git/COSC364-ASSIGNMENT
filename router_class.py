@@ -49,6 +49,7 @@ class Router:
     def toggle_activity(self):
         """Turns router on/off and resets the f_table"""
         self.active = not self.active
+        print('Toggle activity to:', self.active)
         self.f_table = {self.router_id: (0, 0)}
 
     def recv_msg(self, msg, port):
@@ -60,7 +61,8 @@ class Router:
                 self.toggle_activity()
 
     def process_msg(self, msg, port):
-        """ Process the message by taking the message and port number """
+        """ Process the message by taking the message and port number the message was received on
+        first checks destination of the message and then checks message type form the msg header""
         try:
             if str(int(msg[:6], 2)) == self.router_id or str(int(msg[:6], 2)) == '0':
                 msg_dst, typ, body = self.pkt_unravel(msg)
