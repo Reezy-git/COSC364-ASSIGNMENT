@@ -59,8 +59,12 @@ def read_router_file(filename):
     output_slice = []
 
     # open the file and read the lines
-    router_file = open(filename, 'r')
-    router_contents = router_file.readlines()
+    try:
+        router_file = open(filename, 'r')
+        router_contents = router_file.readlines()
+    except FileNotFoundError as e:
+        print(f"File not found!", file=sys.stderr)
+        sys.exit()
 
     # for the contents in the file, get the router_id, input_ports and output ports
     for router_content in router_contents:
