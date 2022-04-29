@@ -1,7 +1,7 @@
 """
-  Client_v1.0.py: client for testing
+  Client.py: client for testing
   How to use: run in command line with arguments PORT, ROUTER_ID, TYPE, MESSAGE
-  e.g. python3 Client_v1.0.py 1112 1 1 'Your message here'
+  e.g. python3 Client.py 1112 1 1 'Your message here'
            this will send a message to router 1 via injection port 1112 requesting router1 to print message (type 1)
   if MESSAGE == 1 it will send the example forwarding table dictionary below
   if ID = 0 any router will accept the message

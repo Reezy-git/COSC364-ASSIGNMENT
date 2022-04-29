@@ -84,6 +84,8 @@ class Router:
                 if self.f_table.__contains__(msg_dst):
                     target = self.network_id, self.f_table[msg_dst][0]
                     self.sender.sendto(msg.encode('utf8'), target)
+                else:
+                    print('No route to', msg_dst, 'found. Packet dropped.')
         except ValueError:
             print('Incorrect message format received at Router ID:', self.router_id)
 
